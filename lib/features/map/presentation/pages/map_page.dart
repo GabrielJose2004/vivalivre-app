@@ -23,9 +23,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   // Mock data — agora com dados de teste em Mauá, SP
   final List<Map<String, dynamic>> _bathrooms = [
-    {'id': 1, 'name': 'Shopping de Mauá (Mauá Plaza Shopping)', 'rating': 4.8, 'distance': '0.0 km', 'tags': ['Acessível', 'Limpo'], 'open': true, 'lat': -23.66417, 'lng': -46.46139},
-    {'id': 2, 'name': 'Rua Dorival Cagnotto, 39, Jardim Miranda D\'Aviz', 'rating': 4.1, 'distance': '0.0 km', 'tags': ['Gratuito', 'Público'], 'open': true, 'lat': -23.66279, 'lng': -46.43183},
-    {'id': 3, 'name': 'Supermercado Nagumo (Av. Barão de Mauá, 3232)', 'rating': 4.5, 'distance': '0.0 km', 'tags': ['Acessível', 'Comercial'], 'open': true, 'lat': -23.6558, 'lng': -46.4429},
+    {'id': 1, 'name': 'Shopping de Mauá (Mauá Plaza Shopping)', 'rating': 4.8, 'distance': '0.0 km', 'tags': ['Acessível', 'Limpo'], 'open': true, 'lat': -23.666912, 'lng': -46.462345},
+    {'id': 2, 'name': 'Rua Dorival Cagnotto, 39, Jardim Miranda D\'Aviz', 'rating': 4.1, 'distance': '0.0 km', 'tags': ['Gratuito', 'Público'], 'open': true, 'lat': -23.681121, 'lng': -46.435728},
+    {'id': 3, 'name': 'Supermercado Nagumo (Av. Barão de Mauá, 3232)', 'rating': 4.5, 'distance': '0.0 km', 'tags': ['Acessível', 'Comercial'], 'open': true, 'lat': -23.681617, 'lng': -46.432857},
   ];
 
   @override
@@ -81,11 +81,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     setState(() => _showEmergency = true);
     
     // Find the closest bathroom (open, sorted by distance)
-    final distanceCalc = const Distance();
     final emergencyBathroom = _bathrooms.where((b) => b['open'] == true).toList()..sort((a, b) {
       if (_currentPosition == null) return 0;
-      final distA = distanceCalc.as(LengthUnit.Meter, _currentPosition!, LatLng(a['lat'], a['lng']));
-      final distB = distanceCalc.as(LengthUnit.Meter, _currentPosition!, LatLng(b['lat'], b['lng']));
+      final distA = Geolocator.distanceBetween(_currentPosition!.latitude, _currentPosition!.longitude, a['lat'], a['lng']);
+      final distB = Geolocator.distanceBetween(_currentPosition!.latitude, _currentPosition!.longitude, b['lat'], b['lng']);
       return distA.compareTo(distB);
     });
     
@@ -285,7 +284,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           Positioned(
             left: 16,
             right: 16,
-            bottom: 16,
+            bottom: 10,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -616,7 +615,7 @@ class _LocationCard extends StatelessWidget {
 
     String distanceText = bathroom['distance'] as String;
     if (currentPosition != null) {
-      final distMeters = const Distance().as(LengthUnit.Meter, currentPosition!, LatLng(bathroom['lat'], bathroom['lng'])).toDouble();
+      final distMeters = Geolocator.distanceBetween(currentPosition!.latitude, currentPosition!.longitude, bathroom['lat'], bathroom['lng']);
       if (distMeters < 1000) {
         distanceText = '${distMeters.toInt()} m';
       } else {
