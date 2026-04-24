@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:dio/dio.dart';
 import 'package:viva_livre_app/features/map/presentation/pages/add_bathroom_page.dart';
 
 class MapPage extends StatefulWidget {
@@ -20,13 +21,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   LatLng? _currentPosition;
   bool _isLoadingLocation = true;
 
-  // Mock data — now with real coordinates (São Paulo - Av. Paulista region)
+  // Mock data — agora com dados de teste em Mauá, SP
   final List<Map<String, dynamic>> _bathrooms = [
-    {'id': 1, 'name': 'Shopping Cidade São Paulo', 'rating': 4.8, 'distance': '0.2 km', 'tags': ['Acessível', 'Limpo'], 'open': true, 'lat': -23.5644, 'lng': -46.6525},
-    {'id': 2, 'name': 'Parque Trianon', 'rating': 4.1, 'distance': '0.5 km', 'tags': ['Gratuito', 'Público'], 'open': true, 'lat': -23.5615, 'lng': -46.6559},
-    {'id': 3, 'name': 'Estação Consolação', 'rating': 4.5, 'distance': '0.8 km', 'tags': ['Acessível', 'Metrô'], 'open': true, 'lat': -23.5583, 'lng': -46.6601},
-    {'id': 4, 'name': "McDonald's Paulista", 'rating': 3.7, 'distance': '0.3 km', 'tags': ['Rápido', 'Comercial'], 'open': false, 'lat': -23.5661, 'lng': -46.6496},
-    {'id': 5, 'name': 'Conjunto Nacional', 'rating': 4.6, 'distance': '1.1 km', 'tags': ['Acessível', 'Seguro'], 'open': true, 'lat': -23.5586, 'lng': -46.6588},
+    {'id': 1, 'name': 'Shopping de Mauá (Mauá Plaza Shopping)', 'rating': 4.8, 'distance': '0.0 km', 'tags': ['Acessível', 'Limpo'], 'open': true, 'lat': -23.6666, 'lng': -46.4628},
+    {'id': 2, 'name': 'Rua Dorival Cagnotto, 39, Jardim Miranda D\'Aviz', 'rating': 4.1, 'distance': '0.0 km', 'tags': ['Gratuito', 'Público'], 'open': true, 'lat': -23.6627, 'lng': -46.4318},
+    {'id': 3, 'name': 'Supermercado Nagumo (Av. Barão de Mauá, 3232)', 'rating': 4.5, 'distance': '0.0 km', 'tags': ['Acessível', 'Comercial'], 'open': true, 'lat': -23.6650, 'lng': -46.4350},
   ];
 
   @override
@@ -66,7 +65,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     });
 
     if (_currentPosition != null) {
-      _mapController.move(_currentPosition!, 15.0);
+      _mapController.move(_currentPosition!, 17.0);
     }
   }
 
@@ -130,6 +129,69 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     controller.forward();
   }
 
+  Future<void> _searchAddress(String query) async {
+    if (query.trim().isEmpty) return;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Buscando endereço...'), duration: Duration(seconds: 1)),
+    );
+
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        'https://nominatim.openstreetmap.org/search',
+        queryParameters: {
+          'q': query,
+          'format': 'json',
+          'limit': 1,
+        },
+        options: Options(headers: {'User-Agent': 'br.com.gabriel.vivalivre'}),
+      );
+
+      if (response.data != null && response.data.isNotEmpty) {
+        final result = response.data[0];
+        final lat = double.parse(result['lat'].toString());
+        final lon = double.parse(result['lon'].toString());
+        final searchedLocation = LatLng(lat, lon);
+
+        _animatedMapMove(searchedLocation, 17.0);
+
+        // Find bathrooms within 25km radius
+        bool foundAny = false;
+        final distanceCalc = const Distance();
+        for (var b in _bathrooms) {
+          final bLat = b['lat'] as double;
+          final bLng = b['lng'] as double;
+          final distKm = distanceCalc.as(LengthUnit.Kilometer, searchedLocation, LatLng(bLat, bLng));
+          if (distKm <= 25.0) {
+            foundAny = true;
+            break;
+          }
+        }
+
+        if (!foundAny) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nenhum banheiro encontrado nas proximidades'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Endereço não encontrado.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao buscar endereço.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,8 +201,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              initialCenter: _currentPosition ?? const LatLng(-23.5615, -46.6559), // Paulista Ave default
-              initialZoom: 15.0,
+              initialCenter: _currentPosition ?? const LatLng(-23.6666, -46.4628), // Mauá default
+              initialZoom: 17.0,
               onTap: (tapPosition, point) {
                 if (_selectedPin != null) {
                   setState(() => _selectedPin = null);
@@ -202,25 +264,38 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             openCount: _bathrooms.where((b) => b['open'] == true).length,
             onLocate: () {
               if (_currentPosition != null) {
-                _animatedMapMove(_currentPosition!, 15.0);
+                _animatedMapMove(_currentPosition!, 17.0);
               } else {
                 _determinePosition();
               }
             },
+            onSearch: _searchAddress,
           ),
-
-          // ── Location info card (when a pin is selected) ───────────────
-          if (_selectedPin != null && !_showEmergency)
-            _LocationCard(
-              bathroom: _bathrooms.firstWhere((b) => b['id'] == _selectedPin),
-              onClose: () => setState(() => _selectedPin = null),
-            ),
 
           // ── Emergency overlay ─────────────────────────────────────────
           if (_showEmergency) const _EmergencyOverlay(),
 
-          // ── FABs (Emergency + Add) ────────────────────────────────────
-          _FabRow(onEmergency: _handleEmergency),
+          // ── Cards and FABs vertically stacked ─────────────────────────
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 80,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Location info card (when a pin is selected)
+                if (_selectedPin != null && !_showEmergency) ...[
+                  _LocationCard(
+                    bathroom: _bathrooms.firstWhere((b) => b['id'] == _selectedPin),
+                    onClose: () => setState(() => _selectedPin = null),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                // FABs (Emergency + Add)
+                _FabRow(onEmergency: _handleEmergency),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -402,8 +477,9 @@ class _TopBar extends StatelessWidget {
   final TextEditingController controller;
   final int openCount;
   final VoidCallback onLocate;
+  final ValueChanged<String> onSearch;
 
-  const _TopBar({required this.controller, required this.openCount, required this.onLocate});
+  const _TopBar({required this.controller, required this.openCount, required this.onLocate, required this.onSearch});
 
   @override
   Widget build(BuildContext context) {
@@ -443,6 +519,7 @@ class _TopBar extends StatelessWidget {
                           Expanded(
                             child: TextField(
                               controller: controller,
+                              onSubmitted: onSearch,
                               decoration: const InputDecoration(
                                 hintText: 'Buscar banheiros...',
                                 hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 15),
@@ -529,23 +606,19 @@ class _LocationCard extends StatelessWidget {
     final isOpen = bathroom['open'] as bool;
     final tags = bathroom['tags'] as List;
 
-    return Positioned(
-      left: 16,
-      right: 16,
-      bottom: 80,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 24,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -659,8 +732,7 @@ class _LocationCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -739,13 +811,9 @@ class _FabRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 16,
-      right: 16,
-      bottom: 80,
-      child: Row(
-        children: [
-          // Emergency pill
+    return Row(
+      children: [
+        // Emergency pill
           Expanded(
             child: GestureDetector(
               onTap: onEmergency,
@@ -798,7 +866,6 @@ class _FabRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
