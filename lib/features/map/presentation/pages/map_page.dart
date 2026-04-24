@@ -23,9 +23,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   // Mock data — agora com dados de teste em Mauá, SP
   final List<Map<String, dynamic>> _bathrooms = [
-    {'id': 1, 'name': 'Mauá Plaza Shopping', 'rating': 4.8, 'distance': '0.0 km', 'tags': ['Acessível', 'Limpo'], 'open': true, 'lat': -23.663803, 'lng': -46.461523},
-    {'id': 2, 'name': 'Minha Casa (Jd. Miranda D\'Aviz)', 'rating': 4.1, 'distance': '0.0 km', 'tags': ['Privado', 'Público'], 'open': true, 'lat': -23.66279, 'lng': -46.43183},
-    {'id': 3, 'name': 'Nagumo Barão de Mauá', 'rating': 4.5, 'distance': '0.0 km', 'tags': ['Acessível', 'Comercial'], 'open': true, 'lat': -23.6743, 'lng': -46.4526},
+    {'id': 1, 'name': 'Mauá Plaza Shopping', 'rating': 4.8, 'distance': '0.0 km', 'tags': ['Acessível', 'Limpo'], 'open': true, 'lat': -23.666912, 'lng': -46.462345},
+    {'id': 2, 'name': 'Minha Casa (Jd. Miranda D\'Aviz)', 'rating': 4.1, 'distance': '0.0 km', 'tags': ['Privado', 'Público'], 'open': true, 'lat': -23.681121, 'lng': -46.435728},
+    {'id': 3, 'name': 'Nagumo Barão de Mauá', 'rating': 4.5, 'distance': '0.0 km', 'tags': ['Acessível', 'Comercial'], 'open': true, 'lat': -23.681617, 'lng': -46.432857},
   ];
 
   @override
@@ -83,7 +83,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   void _setFallbackLocation() {
     if (mounted) {
       setState(() {
-        _currentPosition = const LatLng(-23.6673, -46.4616);
+        _currentPosition = const LatLng(-23.681121, -46.435728);
         _isLoadingLocation = false;
       });
       _mapController.move(_currentPosition!, 17.0);
@@ -258,17 +258,27 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                     final isSelected = _selectedPin == b['id'];
                     return Marker(
                       point: LatLng(b['lat'], b['lng']),
-                      width: 60,
-                      height: 80,
+                      width: 40,
+                      height: 40,
                       alignment: Alignment.center,
-                      child: _BathroomPin(
-                        bathroom: b,
-                        isSelected: isSelected,
+                      child: GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
                           setState(() => _selectedPin = isSelected ? null : b['id'] as int);
-                          _animatedMapMove(LatLng(b['lat'], b['lng']), 17.0); // Centralização exata
+                          _animatedMapMove(LatLng(b['lat'], b['lng']), 17.0);
                         },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFF2563EB), width: 3),
+                          ),
+                          child: Icon(
+                            Icons.wc_rounded,
+                            size: 20,
+                            color: isSelected ? Colors.white : const Color(0xFF2563EB),
+                          ),
+                        ),
                       ),
                     );
                   }),
@@ -391,113 +401,7 @@ class _LocationDotState extends State<_LocationDot> with SingleTickerProviderSta
   }
 }
 
-// ── Bathroom Pin ──────────────────────────────────────────────────────────────
 
-class _BathroomPin extends StatelessWidget {
-  final Map<String, dynamic> bathroom;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _BathroomPin({
-    required this.bathroom,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isOpen = bathroom['open'] as bool;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedScale(
-        scale: isSelected ? 1.25 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        child: SizedBox(
-          width: 40,
-          height: 56,
-          child: Stack(
-            alignment: Alignment.topCenter,
-            clipBehavior: Clip.none,
-            children: [
-              // Pin body
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? const Color(0xFF2563EB) : Colors.white,
-                  border: Border.all(
-                    color: isSelected ? Colors.white : (isOpen ? const Color(0xFF2563EB) : Colors.grey),
-                    width: 2.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isSelected
-                          ? const Color(0xFF2563EB).withValues(alpha: 0.35)
-                          : Colors.black.withValues(alpha: 0.15),
-                      blurRadius: isSelected ? 12 : 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.wc_rounded,
-                  size: 18,
-                  color: isSelected ? Colors.white : (isOpen ? const Color(0xFF2563EB) : Colors.grey),
-                ),
-              ),
-              // Pin tail
-              Positioned(
-                bottom: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  transform: Matrix4.rotationZ(0.785),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF2563EB) : Colors.white,
-                    border: isSelected
-                        ? null
-                        : Border.all(
-                            color: isOpen ? const Color(0xFF2563EB) : Colors.grey,
-                            width: 1.5,
-                          ),
-                  ),
-                ),
-              ),
-              // Rating badge
-              Positioned(
-                top: -4,
-                right: -10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 4)],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star_rounded, size: 9, color: Color(0xFFFBBF24)),
-                      const SizedBox(width: 1),
-                      Text(
-                        '${bathroom['rating']}',
-                        style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: Color(0xFF374151)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ── Top search bar ─────────────────────────────────────────────────────────────
 
