@@ -70,7 +70,7 @@ dependencies:
   cached_network_image: ^3.3.0
 
   # Utilitários
-  intl: ^0.18.1
+  intl: ^0.20.2
   shared_preferences: ^2.2.2
   bloc: ^8.1.4
   url_launcher: ^6.3.2
