@@ -14,7 +14,7 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
   String _symptoms = '';
-  String _severity = 'Leve'; // Default value
+  String _severity = 'Leve';
   String _notes = '';
 
   final List<String> _severityOptions = ['Leve', 'Moderada', 'Grave'];
@@ -23,7 +23,7 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2000), // Adjust as needed
+      firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
     if (picked != null && picked != _selectedDate) {
@@ -35,16 +35,15 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // Process data
       final newEntry = HealthEntry(
-        id: DateTime.now().toIso8601String(), // Simple ID generation
+        id: DateTime.now().toIso8601String(),
         date: _selectedDate,
         symptoms: _symptoms,
         severity: _severity,
         notes: _notes,
       );
       context.read<HealthBloc>().add(AddHealthEntry(newEntry));
-      Navigator.pop(context); // Close the form page
+      Navigator.pop(context);
     }
   }
 
@@ -66,7 +65,6 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
           key: _formKey,
           child: ListView(
             children: <Widget>[
-              // Date Input
               const Text('Data:', style: TextStyle(fontWeight: FontWeight.bold)),
               ListTile(
                 title: Text('${_selectedDate.toLocal().toString().split(' ')[0]}'),
@@ -75,7 +73,6 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
               ),
               const SizedBox(height: 16.0),
 
-              // Symptoms Input
               const Text('Sintomas:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8.0),
               TextFormField(
@@ -86,7 +83,6 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
               ),
               const SizedBox(height: 16.0),
 
-              // Severity Input
               const Text('Gravidade:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8.0),
               DropdownButtonFormField<String>(
@@ -109,7 +105,6 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
               ),
               const SizedBox(height: 16.0),
 
-              // Notes Input
               const Text('Observações:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8.0),
               TextFormField(
@@ -118,14 +113,10 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
                 maxLines: 5,
               ),
               const SizedBox(height: 24.0),
-
-              // Save Button (moved to AppBar action)
             ],
           ),
         ),
       ),
     );
   }
-}
-
 }

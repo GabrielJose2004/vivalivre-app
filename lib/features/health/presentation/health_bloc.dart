@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:viva_livre_app/features/health/domain/entities/health_entry.dart';
-import 'package:viva_livre_app/features/health/domain/repositories/health_repository.dart'; // Assuming this repository will be created
+import 'package:viva_livre_app/features/health/data/repositories/health_repository.dart';
 
 part 'health_event.dart';
 part 'health_state.dart';
@@ -18,7 +18,7 @@ class HealthBloc extends Bloc<HealthEvent, HealthState> {
 
   Future<void> _onFetchHealthEntries(
     FetchHealthEntries event,
-    Emitter<AuthState> emit,
+    Emitter<HealthState> emit,
   ) async {
     emit(HealthLoading());
     try {
@@ -31,10 +31,8 @@ class HealthBloc extends Bloc<HealthEvent, HealthState> {
 
   Future<void> _onAddHealthEntry(
     AddHealthEntry event,
-    Emitter<AuthState> emit,
+    Emitter<HealthState> emit,
   ) async {
-    // No need to emit HealthLoading here as the UI already shows a potential loading state (e.g., on button press)
-    // and we want to immediately reflect the result after the operation completes.
     try {
       await _healthRepository.addHealthEntry(event.entry);
       // After adding, refresh the list to show the new entry

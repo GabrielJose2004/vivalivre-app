@@ -7,9 +7,12 @@ import 'package:viva_livre_app/features/auth/presentation/pages/onboarding_page.
 import 'package:viva_livre_app/features/auth/presentation/pages/login_page.dart';
 import 'package:viva_livre_app/features/auth/presentation/pages/register_page.dart';
 import 'package:viva_livre_app/features/home/presentation/pages/main_shell.dart';
+import 'package:viva_livre_app/features/health/presentation/pages/health_dashboard_page.dart';
+import 'package:viva_livre_app/features/health/presentation/pages/add_health_entry_page.dart';
+import 'package:viva_livre_app/features/health/presentation/health_bloc.dart';
 
 class App extends StatelessWidget {
-  final FirebaseAuth firebaseAuth; // Added to receive FirebaseAuth instance
+  final FirebaseAuth firebaseAuth;
 
   const App({super.key, required this.firebaseAuth});
 
@@ -69,20 +72,13 @@ class App extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (_) => BlocProvider<AuthBloc>(
-          create: (_) =>
-              AuthBloc(firebaseAuth: firebaseAuth)..add(AppStarted()),
-          child: const SplashPage(),
-        ),
+        '/': (_) => const SplashPage(),
         '/onboarding': (_) => const OnboardingPage(),
         '/login': (_) => const LoginPage(),
         '/register': (_) => const RegisterPage(),
         '/home': (_) => const MainShell(),
         '/health-dashboard': (_) => const HealthDashboardPage(),
-        '/add-health-entry': (_) => BlocProvider<HealthBloc>(
-          create: (context) => HealthBloc(),
-          child: const AddHealthEntryPage(),
-        ),
+        '/add-health-entry': (_) => const AddHealthEntryPage(),
       },
     );
   }

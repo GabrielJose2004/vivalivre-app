@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:viva_livre_app/features/health/presentation/health_bloc.dart';
-import 'package:viva_livre_app/features/health/presentation/health_state.dart';
-import 'package:viva_livre_app/features/health/presentation/pages/add_health_entry_page.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
 
 class HealthDashboardPage extends StatefulWidget {
   const HealthDashboardPage({super.key});
@@ -16,7 +14,6 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Dispatch fetch event when the widget initializes
     context.read<HealthBloc>().add(FetchHealthEntries());
   }
 
@@ -30,7 +27,6 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: <Widget>[
-            // Header Section
             Icon(Icons.monitor_heart_outlined, size: 80, color: Theme.of(context).primaryColor),
             const SizedBox(height: 12),
             const Text(
@@ -45,7 +41,6 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
             ),
             const SizedBox(height: 32),
 
-            // Placeholder for Charts/Summaries
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -54,7 +49,6 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
                   children: [
                     const Text('Tendências Recentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
-                    // Placeholder for a chart widget
                     Container(
                       height: 150,
                       color: Colors.grey[300],
@@ -66,7 +60,6 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
             ),
             const SizedBox(height: 20),
 
-            // Recent Entries Section
             const Text(
               'Entradas Recentes',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -86,7 +79,6 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
                       itemCount: state.entries.length,
                       itemBuilder: (context, index) {
                         final entry = state.entries[index];
-                        // Format date for display
                         final formattedDate = DateFormat('dd/MM/yyyy').format(entry.date);
 
                         return Card(
@@ -95,9 +87,7 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
                             title: Text(entry.symptoms),
                             subtitle: Text('${entry.severity} - $formattedDate'),
                             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                            onTap: () {
-                              // TODO: Navigate to entry details or edit page
-                            },
+                            onTap: () {},
                           ),
                         );
                       },
@@ -109,7 +99,7 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
                 },
               ),
             ),
-            const SizedBox(height: 20), // Spacing before FAB
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -123,8 +113,4 @@ class _HealthDashboardPageState extends State<HealthDashboardPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-}
-
-}
-
 }
