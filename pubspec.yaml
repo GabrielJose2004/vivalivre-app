@@ -31,6 +31,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Scanner de Laudos
+  image_picker: ^1.1.2
+  file_picker: ^8.1.2
+
   # Base
   cupertino_icons: ^1.0.8
 
@@ -66,11 +70,10 @@ dependencies:
   printing: ^5.11.0
 
   # Câmera e Imagem
-  image_picker: ^1.0.4
   cached_network_image: ^3.3.0
 
   # Utilitários
-  intl: ^0.18.1
+  intl: ^0.20.2
   shared_preferences: ^2.2.2
   bloc: ^8.1.4
   url_launcher: ^6.3.2
