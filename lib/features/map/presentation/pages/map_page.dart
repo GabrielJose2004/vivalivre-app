@@ -38,33 +38,54 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     bool serviceEnabled;
     LocationPermission permission;
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      setState(() => _isLoadingLocation = false);
-      return;
-    }
+    setState(() => _isLoadingLocation = true);
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        setState(() => _isLoadingLocation = false);
+    try {
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _setFallbackLocation();
         return;
       }
+
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _setFallbackLocation();
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        _setFallbackLocation();
+        return;
+      } 
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 3),
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPosition = LatLng(position.latitude, position.longitude);
+          _isLoadingLocation = false;
+        });
+        _mapController.move(_currentPosition!, 17.0);
+      }
+    } catch (e) {
+      _setFallbackLocation();
     }
-    
-    if (permission == LocationPermission.deniedForever) {
-      setState(() => _isLoadingLocation = false);
-      return;
-    } 
+  }
 
-    final position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-      _isLoadingLocation = false;
-    });
-
-    if (_currentPosition != null) {
+  void _setFallbackLocation() {
+    if (mounted) {
+      setState(() {
+        _currentPosition = const LatLng(-23.6673, -46.4616);
+        _isLoadingLocation = false;
+      });
       _mapController.move(_currentPosition!, 17.0);
     }
   }
@@ -218,7 +239,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'br.com.gabriel.vivalivre',
+                userAgentPackageName: 'br.com.jose.vivalivre',
                 retinaMode: true,
               ),
               MarkerLayer(
