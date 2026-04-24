@@ -18,11 +18,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _customConditionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   // -- State --
   bool _obscurePassword = true;
-  String? _selectedDii; // 'Crohn' ou 'Retocolite'
+  String? _selectedCondition;
   File? _laudoFile;
   bool _isPdf = false;
   String? _fileName;
@@ -30,15 +31,30 @@ class _RegisterPageState extends State<RegisterPage> {
   // Regex simples para validar formato de e-mail
   static final _emailRegex = RegExp(r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$');
 
+  // Lista de condições clínicas comuns no Brasil
+  static const List<String> _conditions = [
+    'Doença de Crohn',
+    'Retocolite Ulcerativa',
+    'Pancolite',
+    'Proctite Ulcerativa',
+    'Colite Indeterminada',
+    'Síndrome do Intestino Irritável (SII)',
+    'Doença Celíaca',
+    'Incontinência Fecal',
+    'Gestante',
+    'Outra',
+  ];
+
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _customConditionController.dispose();
     super.dispose();
   }
 
-  // -- Logica de Upload --
+  // -- Lógica de Upload --
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
@@ -67,24 +83,30 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  // -- Logica de Registo --
+  // -- Lógica de Registo --
   void _onRegisterPressed() {
-    // 1. Valida o formulario
+    // 1. Valida o formulário
     if (!_formKey.currentState!.validate()) return;
 
-    // 2. Valida selecao de DII
-    if (_selectedDii == null) {
-      _showSnack('Selecione o seu tipo de DII.');
+    // 2. Valida selecção de condição
+    if (_selectedCondition == null) {
+      _showSnack('Selecione a sua condição clínica.');
       return;
     }
 
-    // 3. Valida laudo
+    // 3. Se escolheu "Outra", valida o campo customizado
+    if (_selectedCondition == 'Outra' && _customConditionController.text.trim().isEmpty) {
+      _showSnack('Descreva a sua condição clínica.');
+      return;
+    }
+
+    // 4. Valida laudo
     if (_laudoFile == null) {
-      _showSnack('O anexo do laudo medico e obrigatorio.');
+      _showSnack('O anexo do laudo médico é obrigatório.');
       return;
     }
 
-    // 4. Dispara o evento real no AuthBloc (cria conta no Firebase)
+    // 5. Dispara o evento real no AuthBloc (cria conta no Firebase)
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -155,25 +177,19 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Crie o seu perfil de paciente para validar o seu Cartao DII de uso prioritario.',
+                        'Crie o seu perfil de paciente para validar o seu Cartão de uso prioritário.',
                         style: TextStyle(fontSize: 15, color: Color(0xFF64748B), height: 1.4),
                       ),
                       const SizedBox(height: 32),
 
                       // -- Dados Pessoais --
-                      const Text('Dados Pessoais', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                      const _SectionTitle('Dados Pessoais'),
                       const SizedBox(height: 16),
 
                       TextFormField(
                         controller: _nameController,
                         enabled: !isLoading,
-                        decoration: InputDecoration(
-                          hintText: 'Nome Completo',
-                          prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF94A3B8)),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        ),
+                        decoration: _inputDecoration('Nome Completo', Icons.person_outline),
                         textInputAction: TextInputAction.next,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -191,20 +207,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         controller: _emailController,
                         enabled: !isLoading,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          hintText: 'E-mail',
-                          prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF94A3B8)),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        ),
+                        decoration: _inputDecoration('E-mail', Icons.email_outlined),
                         textInputAction: TextInputAction.next,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Informe o seu e-mail.';
                           }
                           if (!_emailRegex.hasMatch(value.trim())) {
-                            return 'Formato de e-mail invalido.';
+                            return 'Formato de e-mail inválido.';
                           }
                           return null;
                         },
@@ -216,7 +226,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         enabled: !isLoading,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          hintText: 'Palavra-passe',
+                          hintText: 'Palavra-passe (mín. 6 caracteres)',
+                          hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                           prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF94A3B8)),
                           filled: true,
                           fillColor: Colors.white,
@@ -241,33 +252,88 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 32),
 
-                      // -- Condicao Clinica --
-                      const Text('Diagnostico Principal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                      // -- Condição Clínica (Dropdown) --
+                      const _SectionTitle('Condição Clínica'),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Selecione a condição que melhor se aplica ao seu caso.',
+                        style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                      ),
                       const SizedBox(height: 12),
+
                       IgnorePointer(
                         ignoring: isLoading,
                         child: Opacity(
                           opacity: isLoading ? 0.5 : 1.0,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _buildDiiOption('Doenca de Crohn', 'Crohn'),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedCondition,
+                              isExpanded: true,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.medical_information_outlined, color: Color(0xFF94A3B8)),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildDiiOption('Retocolite Ulcerativa', 'Retocolite'),
+                              hint: const Text(
+                                'Selecione a sua condição',
+                                style: TextStyle(color: Color(0xFF94A3B8)),
                               ),
-                            ],
+                              dropdownColor: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              items: _conditions.map((condition) {
+                                return DropdownMenuItem<String>(
+                                  value: condition,
+                                  child: Text(
+                                    condition,
+                                    style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCondition = value;
+                                  if (value != 'Outra') {
+                                    _customConditionController.clear();
+                                  }
+                                });
+                              },
+                            ),
                           ),
                         ),
                       ),
+
+                      // Campo customizado para "Outra"
+                      if (_selectedCondition == 'Outra') ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _customConditionController,
+                          enabled: !isLoading,
+                          decoration: _inputDecoration('Descreva a sua condição', Icons.edit_outlined),
+                          textInputAction: TextInputAction.done,
+                          validator: (value) {
+                            if (_selectedCondition == 'Outra' && (value == null || value.trim().isEmpty)) {
+                              return 'Descreva a sua condição clínica.';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 32),
 
-                      // -- Comprovacao Medica --
-                      const Text('Comprovacao Medica', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                      // -- Comprovação Médica --
+                      const _SectionTitle('Comprovação Médica'),
                       const SizedBox(height: 8),
                       const Text(
-                        'O teu laudo sera analisado para validar o teu Cartao DII de uso prioritario. Anexa uma foto clara ou o PDF original.',
+                        'O teu laudo será analisado para validar o teu Cartão de uso prioritário. Anexa uma foto clara ou o PDF original.',
                         style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                       ),
                       const SizedBox(height: 16),
@@ -364,7 +430,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                       const SizedBox(height: 40),
 
-                      // -- Botao Finalizar (com loading inline) --
+                      // -- Botão Finalizar (com loading inline) --
                       ElevatedButton(
                         onPressed: canSubmit ? _onRegisterPressed : null,
                         style: ElevatedButton.styleFrom(
@@ -411,39 +477,32 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildDiiOption(String title, String value) {
-    final isSelected = _selectedDii == value;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedDii = value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
-              color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF1E293B) : const Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
+  // Helper para reutilizar decoração dos inputs
+  InputDecoration _inputDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+      prefixIcon: Icon(icon, color: const Color(0xFF94A3B8)),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+    );
+  }
+}
+
+// -- Widget auxiliar para títulos de secção --
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
       ),
     );
   }
