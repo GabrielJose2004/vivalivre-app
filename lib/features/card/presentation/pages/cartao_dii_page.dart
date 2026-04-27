@@ -79,7 +79,7 @@ class CartaoDIIPage extends StatelessWidget {
             }
 
             // ── Documento não existe ou sem dados ──
-            if (!snapshot.hasData || !snapshot.data!.exists) {
+            if (!snapshot.hasData || snapshot.data == null || !snapshot.data!.exists) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -88,8 +88,8 @@ class CartaoDIIPage extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFEF3C7),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFEF3C7),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.warning_amber_rounded, size: 48, color: Color(0xFFF59E0B)),
@@ -113,8 +113,8 @@ class CartaoDIIPage extends StatelessWidget {
 
             // ── Extração de Dados do Firestore ──
             final data = snapshot.data!.data() as Map<String, dynamic>?;
-            final String? cid = data?['cid'] as String?;
-            final String? laudoUrl = data?['laudoUrl'] as String?;
+            final String? cid = data != null ? data['cid'] as String? : null;
+            final String? laudoUrl = data != null ? data['laudoUrl'] as String? : null;
             final String userName = user.displayName ?? 'Usuário';
 
             // ── UI Principal ──
