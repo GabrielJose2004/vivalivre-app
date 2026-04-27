@@ -229,8 +229,7 @@ class _HealthPageState extends State<HealthPage> {
 
                   // -- Acesso Rapido: Banheiro --
                   GestureDetector(
-                    onTap: () {
-                      HapticFeedback.vibrate();
+                    onTap: () async {
                       HapticFeedback.heavyImpact();
                       _addRecord('Ida ao Banheiro', 'banheiro');
                     },
@@ -666,8 +665,7 @@ class _SymptomSearchModalState extends State<_SymptomSearchModal> {
               child: ElevatedButton(
                 onPressed: selectedSymptoms.isEmpty
                     ? null
-                    : () {
-                        HapticFeedback.vibrate();
+                    : () async {
                         HapticFeedback.heavyImpact();
                         widget.onAdd(selectedSymptoms);
                         Navigator.pop(context);
