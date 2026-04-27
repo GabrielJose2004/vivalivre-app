@@ -90,7 +90,7 @@ class _HealthPageState extends State<HealthPage> {
 
   // ── Lógica ──
   void _confirmDelete(int index) {
-    HapticFeedback.heavyImpact();
+    HapticFeedback.vibrate();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -230,7 +230,7 @@ class _HealthPageState extends State<HealthPage> {
                   // -- Acesso Rapido: Banheiro --
                   GestureDetector(
                     onTap: () async {
-                      HapticFeedback.heavyImpact();
+                      HapticFeedback.vibrate();
                       _addRecord('Ida ao Banheiro', 'banheiro');
                     },
                     child: Container(
@@ -666,7 +666,7 @@ class _SymptomSearchModalState extends State<_SymptomSearchModal> {
                 onPressed: selectedSymptoms.isEmpty
                     ? null
                     : () async {
-                        HapticFeedback.heavyImpact();
+                        HapticFeedback.vibrate();
                         widget.onAdd(selectedSymptoms);
                         Navigator.pop(context);
                       },
