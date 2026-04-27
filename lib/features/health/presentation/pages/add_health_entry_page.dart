@@ -13,11 +13,22 @@ class AddHealthEntryPage extends StatefulWidget {
 class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
-  String _symptoms = '';
+  List<String> selectedSymptoms = [];
   String _severity = 'Leve';
   String _notes = '';
 
   final List<String> _severityOptions = ['Leve', 'Moderada', 'Grave'];
+  
+  final List<String> _symptomsOptions = [
+    'Dor Abdominal', 'Diarreia', 'Sangue nas Fezes', 'Fadiga Extrema',
+    'Febre', 'Náusea/Vómito', 'Gases/Inchaço', 'Perda de Apetite', 'Dores Articulares',
+    'Cólica Intestinal', 'Urgência Evacuatória', 'Incontinência Fecal', 'Muco nas Fezes',
+    'Constipação/Prisão de Ventre', 'Azia', 'Refluxo', 'Dor de Cabeça', 'Enxaqueca',
+    'Tontura', 'Calafrios', 'Suores Noturnos', 'Aftas', 'Feridas na Boca', 'Lesões na Pele',
+    'Eritema Nodoso', 'Olhos Vermelhos/Irritados', 'Visão Embaçada', 'Perda de Peso',
+    'Anemia', 'Fraqueza', 'Desidratação', 'Boca Seca', 'Palpitações', 'Ansiedade',
+    'Insónia', 'Alterações de Humor'
+  ];
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -38,7 +49,7 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
       final newEntry = HealthEntry(
         id: DateTime.now().toIso8601String(),
         date: _selectedDate,
-        symptoms: _symptoms,
+        symptoms: selectedSymptoms.join(', '),
         severity: _severity,
         notes: _notes,
       );
@@ -49,7 +60,9 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Registrar Novo Sintoma/Crise'),
         actions: [
@@ -75,11 +88,46 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
 
               const Text('Sintomas:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8.0),
-              TextFormField(
-                decoration: const InputDecoration(hintText: 'Descreva seus sintomas', border: OutlineInputBorder()),
-                onChanged: (value) => _symptoms = value,
-                validator: (value) => (value == null || value.isEmpty) ? 'Por favor, descreva os sintomas' : null,
-                maxLines: 3,
+              FormField<List<String>>(
+                initialValue: selectedSymptoms,
+                validator: (value) => (value == null || value.isEmpty) ? 'Selecione pelo menos um sintoma' : null,
+                builder: (FormFieldState<List<String>> state) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        children: _symptomsOptions.map((symptom) {
+                          return FilterChip(
+                            label: Text(symptom),
+                            selected: selectedSymptoms.contains(symptom),
+                            onSelected: (bool selected) {
+                              setState(() {
+                                if (selected) {
+                                  selectedSymptoms.add(symptom);
+                                } else {
+                                  selectedSymptoms.remove(symptom);
+                                }
+                              });
+                              state.didChange(selectedSymptoms);
+                            },
+                            selectedColor: const Color(0xFF2563EB).withValues(alpha: 0.2),
+                            checkmarkColor: const Color(0xFF2563EB),
+                          );
+                        }).toList(),
+                      ),
+                      if (state.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            state.errorText!,
+                            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16.0),
 
@@ -115,6 +163,7 @@ class _AddHealthEntryPageState extends State<AddHealthEntryPage> {
               const SizedBox(height: 24.0),
             ],
           ),
+        ),
         ),
       ),
     );
