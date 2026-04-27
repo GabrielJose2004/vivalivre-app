@@ -21,6 +21,47 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
   }
 
+  // ── Tradução de erros do Firebase para Português ──
+  String _translateFirebaseError(FirebaseAuthException e) {
+    switch (e.code) {
+      // Login
+      case 'user-not-found':
+        return 'Nenhuma conta encontrada com este e-mail.';
+      case 'wrong-password':
+        return 'Senha incorreta. Tente novamente.';
+      case 'invalid-credential':
+        return 'E-mail ou senha incorretos.';
+      case 'invalid-email':
+        return 'O formato do e-mail é inválido.';
+      case 'user-disabled':
+        return 'Esta conta foi desativada. Contacte o suporte.';
+      case 'too-many-requests':
+        return 'Demasiadas tentativas. Aguarde alguns minutos e tente novamente.';
+
+      // Registo
+      case 'email-already-in-use':
+        return 'Já existe uma conta com este e-mail.';
+      case 'weak-password':
+        return 'A senha é muito fraca. Use pelo menos 6 caracteres.';
+      case 'operation-not-allowed':
+        return 'Este método de autenticação não está disponível.';
+
+      // Google Sign-In
+      case 'account-exists-with-different-credential':
+        return 'Já existe uma conta com este e-mail usando outro método de login.';
+      case 'popup-closed-by-user':
+      case 'cancelled':
+        return 'Login cancelado pelo utilizador.';
+
+      // Rede
+      case 'network-request-failed':
+        return 'Sem conexão à internet. Verifique a sua rede.';
+
+      default:
+        return e.message ?? 'Ocorreu um erro inesperado. Tente novamente.';
+    }
+  }
+
   Future<void> _onAuthAppStarted(
     AuthAppStarted event,
     Emitter<AuthState> emit,
@@ -46,12 +87,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (userCredential.user != null) {
         emit(AuthAuthenticated(userCredential.user!));
       } else {
-        emit(const AuthError('Usuário não encontrado.'));
+        emit(const AuthError('Não foi possível iniciar sessão.'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AuthError(e.message ?? 'Erro ao fazer login.'));
+      emit(AuthError(_translateFirebaseError(e)));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(const AuthError('Ocorreu um erro inesperado. Tente novamente.'));
     }
   }
 
@@ -72,12 +113,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (userCredential.user != null) {
         emit(AuthAuthenticated(userCredential.user!));
       } else {
-        emit(const AuthError('Erro ao criar conta.'));
+        emit(const AuthError('Não foi possível criar a conta.'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AuthError(e.message ?? 'Erro ao registrar usuário.'));
+      emit(AuthError(_translateFirebaseError(e)));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(const AuthError('Ocorreu um erro inesperado. Tente novamente.'));
     }
   }
 
@@ -106,12 +147,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (userCredential.user != null) {
         emit(AuthAuthenticated(userCredential.user!));
       } else {
-        emit(const AuthError('Erro ao fazer login com Google.'));
+        emit(const AuthError('Não foi possível iniciar sessão com o Google.'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AuthError(e.message ?? 'Erro de autenticação com Google.'));
+      emit(AuthError(_translateFirebaseError(e)));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(const AuthError('Ocorreu um erro inesperado. Tente novamente.'));
     }
   }
 
@@ -125,7 +166,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _googleSignIn.signOut();
       emit(AuthUnauthenticated());
     } catch (e) {
-      emit(AuthError('Erro ao fazer logout: ${e.toString()}'));
+      emit(const AuthError('Erro ao terminar sessão. Tente novamente.'));
     }
   }
 }

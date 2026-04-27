@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 import 'package:intl/intl.dart';
 import 'package:viva_livre_app/features/health/presentation/pages/health_dashboard_page.dart';
 
@@ -62,8 +63,35 @@ class _HealthPageState extends State<HealthPage> {
   }
 
   // ── Lógica ──
+  void _confirmDelete(int index) {
+    HapticFeedback.heavyImpact();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Registo', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Tem a certeza que deseja excluir este registo?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: _kSubText)),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _timeline.removeAt(index);
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _addRecord(String title, String type) {
-    HapticFeedback.mediumImpact();
+    Vibration.vibrate(duration: 30);
     setState(() {
       _timeline.insert(
         0,
@@ -123,7 +151,7 @@ class _HealthPageState extends State<HealthPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Header ──
+            // -- Header --
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -172,9 +200,9 @@ class _HealthPageState extends State<HealthPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Acesso Rápido: Banheiro ──
+                  // -- Acesso Rapido: Banheiro --
                   GestureDetector(
-                    onTap: () => _addRecord('Ida ao Banheiro', 'banheiro'),
+                    onTap: () { HapticFeedback.vibrate(); HapticFeedback.heavyImpact(); _addRecord('Ida ao Banheiro', 'banheiro'); },
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -214,7 +242,7 @@ class _HealthPageState extends State<HealthPage> {
               ),
             ),
 
-            // ── Timeline ──
+            // -- Timeline --
             Expanded(
               child: _timeline.isEmpty
                   ? const _EmptyTimeline()
@@ -222,9 +250,12 @@ class _HealthPageState extends State<HealthPage> {
                       padding: const EdgeInsets.all(24),
                       itemCount: _timeline.length,
                       itemBuilder: (context, index) {
-                        return _TimelineItem(
-                          record: _timeline[index],
-                          isLast: index == _timeline.length - 1,
+                        return GestureDetector(
+                          onLongPress: () => _confirmDelete(index),
+                          child: _TimelineItem(
+                            record: _timeline[index],
+                            isLast: index == _timeline.length - 1,
+                          ),
                         );
                       },
                     ),
@@ -233,7 +264,7 @@ class _HealthPageState extends State<HealthPage> {
         ),
       ),
       
-      // ── FAB Adicionar Sintoma ──
+      // -- FAB Adicionar Sintoma --ma ──
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddSymptomModal,
         backgroundColor: Colors.white,
@@ -263,11 +294,31 @@ class _EmptyTimeline extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.sentiment_satisfied_alt_rounded, size: 64, color: Color(0xFF94A3B8)),
+          ),
+          const SizedBox(height: 24),
           const Text(
-            'Nenhum registo ainda hoje.',
-            style: TextStyle(fontSize: 16, color: Color(0xFF94A3B8)),
+            'Tudo tranquilo por aqui.',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Nenhum evento registado ainda hoje.\nContinue a cuidar da sua saúde!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.4),
           ),
         ],
       ),
@@ -388,7 +439,7 @@ class _TimelineItem extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-//  Modal de Pesquisa de Sintomas
+//  Modal de Pesquisa�de Sintomas
 // ═════════════════════════════════════════════════════════════════════════════
 
 class _SymptomSearchModal extends StatefulWidget {
@@ -574,4 +625,6 @@ class _SymptomSearchModalState extends State<_SymptomSearchModal> {
     );
   }
 }
+
+
 
