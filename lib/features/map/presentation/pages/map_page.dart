@@ -125,8 +125,50 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     }
   }
 
-  void _animatedMove(LatLng destLocation, double destZoom) {
-    final camera = _mapController.camera;
+  // ── "Achar Banheiro Agora" ────────────────────────────────────────────────
+  //  BUG-1 FIX: cálculo matemático com Distance() do latlong2.
+  //  Nenhuma chamada de rede, nenhum geocoding.
+
+  void _handleFindNearest() {
+    Vibration.vibrate(duration: 150, amplitude: 255);
+    setState(() => _showEmergency = true);
+
+    // Encontra o banheiro matematicamente mais próximo usando Distance()
+    Map<String, dynamic>? nearest;
+    double nearestMeters = double.infinity;
+
+    for (final b in _kBathroomsDb) {
+      final meters = _distance.as(
+        LengthUnit.Meter,
+        _currentPosition,
+        LatLng(b['lat'] as double, b['lng'] as double),
+      );
+      if (meters < nearestMeters) {
+        nearestMeters = meters;
+        nearest = b;
+      }
+    }
+
+    if (nearest != null) {
+      final target = LatLng(nearest['lat'] as double, nearest['lng'] as double);
+
+      _animatedMove(target, _kInitialZoom);
+
+      Future.delayed(const Duration(milliseconds: 1100), () {
+        if (!mounted) return;
+        setState(() {
+          _showEmergency = false;
+          _selectedPin = nearest!['id'] as int;
+        });
+      });
+    } else {
+      if (mounted) setState(() => _showEmergency = false);
+    }
+  }
+
+  // ── Animação suave do mapa ────────────────────────────────────────────────
+
+  void _animatedMove(LatLng dest, double zoom) {
     final latTween = Tween<double>(
       begin: camera.center.latitude,
       end: destLocation.latitude,
@@ -177,19 +219,107 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocConsumer<MapBloc, MapState>(
-        listener: (context, state) {
-          if (state is MapError) {
-            _showSnack(state.message);
-          }
-          if (state is MapLoaded && state.nearestBathroom != null) {
-            _animatedMove(state.nearestBathroom!.location, 18.0);
-          }
-        },
-        builder: (context, state) {
-          if (state is MapLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Stack(
+        children: [
+          // ── Flutter Map ────────────────────────────────────────────────────
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              // BUG-4 FIX: centro inicial = casa do utilizador (-23.681121, -46.435728)
+              initialCenter: _kInitialCenter,
+              initialZoom: _kInitialZoom,
+              onTap: (_, __) {
+                if (_selectedPin != null) setState(() => _selectedPin = null);
+              },
+            ),
+            children: [
+              // ── Tile Layer ─────────────────────────────────────────────────
+              // CartoDB Positron: Design minimalista e médico, tons de cinza suaves.
+              // Base de dados: OpenStreetMap (mesmas ruas), renderização limpa.
+              TileLayer(
+                urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
+                userAgentPackageName: 'com.vivalivre.app',
+
+                // Cache agressivo: evita re-downloads e garante que tiles
+                // já carregados continuam visíveis ao fazer pan/zoom.
+                maxNativeZoom: 19,
+                maxZoom: 22,
+
+                // Fallback visual enquanto o tile ainda está a carregar.
+                errorTileCallback: (tile, error, stackTrace) {
+                  // tile falhou → não mostra nada (padrão), sem crash.
+                },
+              ),
+
+              // ── Marker Layer ───────────────────────────────────────────────
+              MarkerLayer(
+                markers: [
+                  // Marcador da posição actual — bolinha vermelha sólida
+                  _buildCurrentLocationMarker(),
+
+                  // Marcadores dos banheiros — círculo azul com ícone WC
+                  ..._kBathroomsDb.map(_buildBathroomMarker),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Loading spinner do GPS ─────────────────────────────────────────
+          if (_isLocating)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                child: Container(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(color: _kBlue, strokeWidth: 3),
+                          SizedBox(height: 16),
+                          Text(
+                            'A procurar satélites...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // ── Barra de busca superior ────────────────────────────────────────
+          _TopBar(
+            searchController: _searchController,
+            openCount: _kBathroomsDb.where((b) => b['open'] == true).length,
+            isLocating: _isLocating,
+            onLocate: _fetchRealGps,
+          ),
+
+          // ── Overlay de emergência ──────────────────────────────────────────
+          if (_showEmergency) const _EmergencyOverlay(),
 
           if (state is MapLoaded) {
             return Stack(
