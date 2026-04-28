@@ -759,7 +759,13 @@ class _EntryDetailSheet extends StatelessWidget {
             Expanded(
               child: ListView(
                 controller: controller,
-                padding: const EdgeInsets.all(24),
+                // O padding bottom soma viewPadding.bottom (barra de navegação nativa)
+                // para que o botão Eliminar nunca fique atrás dos botões do sistema.
+                padding: EdgeInsets.fromLTRB(
+                  24, 24, 24,
+                  24 + MediaQuery.of(context).viewPadding.bottom,
+                ),
+
                 children: [
 
                   // Gravidade
@@ -867,63 +873,66 @@ class _EntryDetailSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
 
-                  // Botão Eliminar
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.delete_outline_rounded,
-                        color: Color(0xFFEF4444)),
-                    label: const Text('Eliminar este registo',
-                        style: TextStyle(
-                          color: Color(0xFFEF4444),
-                          fontWeight: FontWeight.w600,
-                        )),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: Color(0xFFEF4444)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          title: const Text('Eliminar registo?',
-                              style: TextStyle(fontWeight: FontWeight.w700)),
-                          content: const Text(
-                            'Este registo será removido permanentemente do seu histórico clínico.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('Cancelar',
-                                  style: TextStyle(color: Color(0xFF64748B))),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFEF4444),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 0,
-                              ),
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                context.read<HealthBloc>().add(
-                                  DeleteHealthEntry(docId: entry.id, userId: uid),
-                                );
-                              },
-                              child: const Text('Eliminar',
-                                  style: TextStyle(fontWeight: FontWeight.w700)),
-                            ),
-                          ],
+                  // Botão Eliminar — SafeArea garante visibilidade em qualquer dispositivo
+                  SafeArea(
+                    bottom: true,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.delete_outline_rounded,
+                          color: Color(0xFFEF4444)),
+                      label: const Text('Eliminar este registo',
+                          style: TextStyle(
+                            color: Color(0xFFEF4444),
+                            fontWeight: FontWeight.w600,
+                          )),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: Color(0xFFEF4444)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                      );
-                    },
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            title: const Text('Eliminar registo?',
+                                style: TextStyle(fontWeight: FontWeight.w700)),
+                            content: const Text(
+                              'Este registo será removido permanentemente do seu histórico clínico.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Cancelar',
+                                    style: TextStyle(color: Color(0xFF64748B))),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFEF4444),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  context.read<HealthBloc>().add(
+                                    DeleteHealthEntry(docId: entry.id, userId: uid),
+                                  );
+                                },
+                                child: const Text('Eliminar',
+                                    style: TextStyle(fontWeight: FontWeight.w700)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
