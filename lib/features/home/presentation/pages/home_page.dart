@@ -17,6 +17,7 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
