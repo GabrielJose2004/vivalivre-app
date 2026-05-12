@@ -160,7 +160,8 @@ class _MapPageState extends State<MapPage>
           }
           if (state is MapLoaded) {
             if (_showEmergency) {
-              if (state.nearestBathroom != null && state.selectedBathroom != null) {
+              if (state.nearestBathroom != null &&
+                  state.selectedBathroom != null) {
                 _animatedMove(state.selectedBathroom!.location, _kInitialZoom);
                 Future.delayed(const Duration(milliseconds: 1100), () {
                   if (!mounted) return;
@@ -169,14 +170,19 @@ class _MapPageState extends State<MapPage>
               } else {
                 setState(() => _showEmergency = false);
               }
-            } else if (state.selectedBathroom == null && state.currentPosition != const LatLng(-23.66070438587852, -46.43089117960558)) {
+            } else if (state.selectedBathroom == null &&
+                state.currentPosition !=
+                    const LatLng(-23.66070438587852, -46.43089117960558)) {
               // Move camera if position is updated via search and nothing is selected
               _animatedMove(state.currentPosition, _kInitialZoom);
             }
           }
         },
         builder: (context, state) {
-          LatLng currentPosition = const LatLng(-23.66070438587852, -46.43089117960558);
+          LatLng currentPosition = const LatLng(
+            -23.66070438587852,
+            -46.43089117960558,
+          );
           List<Bathroom> bathrooms = [];
           Bathroom? selectedPin;
           bool isLocating = state is MapLoading;
@@ -196,7 +202,7 @@ class _MapPageState extends State<MapPage>
                 options: MapOptions(
                   initialCenter: currentPosition,
                   initialZoom: _kInitialZoom,
-                  onTap: (_, __) {
+                  onTap: (_, _) {
                     if (selectedPin != null) {
                       context.read<MapBloc>().add(const ClearSelection());
                     }
@@ -204,7 +210,8 @@ class _MapPageState extends State<MapPage>
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
                     subdomains: const ['a', 'b', 'c', 'd'],
                     userAgentPackageName: 'com.vivalivre.app',
                     maxNativeZoom: 19,
@@ -214,7 +221,9 @@ class _MapPageState extends State<MapPage>
                   MarkerLayer(
                     markers: [
                       _buildCurrentLocationMarker(currentPosition),
-                      ...bathrooms.map((b) => _buildBathroomMarker(b, selectedPin)),
+                      ...bathrooms.map(
+                        (b) => _buildBathroomMarker(b, selectedPin),
+                      ),
                     ],
                   ),
                 ],
@@ -227,7 +236,10 @@ class _MapPageState extends State<MapPage>
                       color: Colors.white.withValues(alpha: 0.3),
                       child: Center(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 20,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(24),
@@ -242,7 +254,10 @@ class _MapPageState extends State<MapPage>
                           child: const Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              CircularProgressIndicator(color: _kBlue, strokeWidth: 3),
+                              CircularProgressIndicator(
+                                color: _kBlue,
+                                strokeWidth: 3,
+                              ),
                               SizedBox(height: 16),
                               Text(
                                 'A procurar satélites...',
@@ -286,15 +301,21 @@ class _MapPageState extends State<MapPage>
                     if (selectedPin != null && !_showEmergency) ...[
                       BathroomCard(
                         bathroom: selectedPin,
-                        distanceText: _formatDistance(currentPosition, selectedPin),
-                        onClose: () => context.read<MapBloc>().add(const ClearSelection()),
+                        distanceText: _formatDistance(
+                          currentPosition,
+                          selectedPin,
+                        ),
+                        onClose: () =>
+                            context.read<MapBloc>().add(const ClearSelection()),
                       ),
                       const SizedBox(height: 12),
                     ],
                     EmergencyButton(
                       onEmergency: _handleFindNearest,
                       onAddBathroom: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const AddBathroomPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const AddBathroomPage(),
+                        ),
                       ),
                     ),
                   ],
@@ -322,7 +343,8 @@ class _CurrentLocationDot extends StatefulWidget {
   State<_CurrentLocationDot> createState() => _CurrentLocationDotState();
 }
 
-class _CurrentLocationDotState extends State<_CurrentLocationDot> with SingleTickerProviderStateMixin {
+class _CurrentLocationDotState extends State<_CurrentLocationDot>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
 
@@ -333,9 +355,10 @@ class _CurrentLocationDotState extends State<_CurrentLocationDot> with SingleTic
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
-    _anim = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
+    _anim = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
   }
 
   @override
@@ -348,7 +371,7 @@ class _CurrentLocationDotState extends State<_CurrentLocationDot> with SingleTic
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _anim,
-      builder: (_, __) => Stack(
+      builder: (_, _) => Stack(
         alignment: Alignment.center,
         children: [
           Transform.scale(
