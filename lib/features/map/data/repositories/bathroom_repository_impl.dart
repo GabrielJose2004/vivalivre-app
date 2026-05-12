@@ -11,13 +11,12 @@ class BathroomRepositoryImpl implements IBathroomRepository {
   BathroomRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
 
   @override
-  Future<List<Bathroom>> getBathrooms() async {
+  Future<List<Bathroom>> getBathrooms(double lat, double lng, {double radius = 5000}) async {
     try {
-      // For now, we use a fixed radius or get it from parameters
       final response = await _apiClient.dio.get('/api/bathrooms/nearby', queryParameters: {
-        'lat': -23.66, // Placeholder, usually passed from UI
-        'lng': -46.43,
-        'radius': 5000,
+        'lat': lat,
+        'lng': lng,
+        'radius': radius,
       });
 
       if (response.statusCode == 200) {
