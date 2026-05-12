@@ -13,10 +13,10 @@ abstract class IHealthRepository {
   /// O [userId] é passado para validação defensiva antes da operação.
   Future<void> deleteEntry(String docId, String userId);
 
-  /// Retorna um [Stream] que emite a lista de registos do utilizador
-  /// sempre que houver alterações no Firestore (tempo real).
+  /// Carrega a lista de registos clínicos do utilizador.
+  /// Faz um GET à rota /api/health/entries e retorna a lista.
   ///
   /// Os registos são ordenados por [timestamp] decrescente,
   /// limitados a 100 entradas.
-  Stream<List<HealthEntry>> watchEntries(String userId);
+  Future<List<HealthEntry>> getEntries(String userId);
 }

@@ -36,20 +36,15 @@ class HealthRepositoryImpl implements IHealthRepository {
   }
 
   @override
-  Stream<List<HealthEntry>> watchEntries(String userId) {
-    // Since we don't have a WebSocket/Stream backend yet, we'll simulate a stream
-    // by fetching once. In a real app, you'd use a polling mechanism or WebSockets.
-    return Stream.fromFuture(_fetchEntries());
-  }
-
-  Future<List<HealthEntry>> _fetchEntries() async {
+  Future<List<HealthEntry>> getEntries(String userId) async {
     try {
       final response = await _apiClient.dio.get('/api/health/entries');
       if (response.statusCode == 200 && response.data is List) {
+        debugPrint('[HealthRepository] getEntries: sucesso');
         return (response.data as List).map((json) => HealthEntryModel.fromJson(json)).toList();
       }
     } catch (e) {
-      debugPrint('[HealthRepository] _fetchEntries ERROR: $e');
+      debugPrint('[HealthRepository] getEntries ERROR: $e');
     }
     return [];
   }
