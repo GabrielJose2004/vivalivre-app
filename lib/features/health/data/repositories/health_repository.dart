@@ -16,6 +16,7 @@ class HealthRepositoryImpl implements IHealthRepository {
         'type': entry.type,
         'description': entry.notes,
         'severity': entry.severity,
+        'symptoms': entry.symptoms,
       });
       debugPrint('[HealthRepository] addEntry: sucesso');
     } catch (e) {
