@@ -7,7 +7,7 @@ abstract class HealthEvent extends Equatable {
   List<Object> get props => [];
 }
 
-/// Inicia a escuta do Stream de registos do Firestore para o [userId].
+/// Carrega a lista de registos de saúde do utilizador.
 class WatchHealthEntries extends HealthEvent {
   final String userId;
   const WatchHealthEntries(this.userId);
@@ -16,17 +16,7 @@ class WatchHealthEntries extends HealthEvent {
   List<Object> get props => [userId];
 }
 
-/// Evento interno disparado pelo Stream quando os dados mudam no Firestore.
-/// Não deve ser disparado diretamente pela UI.
-class _HealthEntriesUpdated extends HealthEvent {
-  final List<HealthEntry> entries;
-  const _HealthEntriesUpdated(this.entries);
-
-  @override
-  List<Object> get props => [entries];
-}
-
-/// Adiciona um novo registo clínico no Firestore.
+/// Adiciona um novo registo clínico.
 class AddHealthEntry extends HealthEvent {
   final HealthEntry entry;
   const AddHealthEntry(this.entry);
@@ -35,7 +25,7 @@ class AddHealthEntry extends HealthEvent {
   List<Object> get props => [entry];
 }
 
-/// Elimina um registo clínico pelo seu ID de documento Firestore.
+/// Elimina um registo clínico pelo seu ID.
 class DeleteHealthEntry extends HealthEvent {
   final String docId;
   final String userId;
