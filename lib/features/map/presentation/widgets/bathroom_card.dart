@@ -43,6 +43,38 @@ class BathroomCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Photo Preview
+          if (bathroom.photoUrl != null && bathroom.photoUrl!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  bathroom.photoUrl!,
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 120,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 32,
+                          color: _kSubText,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
           // Cabeçalho
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,27 +187,27 @@ class BathroomCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-               Expanded(
-                 child: OutlinedButton.icon(
-                   onPressed: onDetails,
-                   icon: const Icon(
-                     Icons.info_outline_rounded,
-                     size: 18,
-                     color: Color(0xFF374151),
-                   ),
-                   label: const Text(
-                     'Detalhes',
-                     style: TextStyle(color: Color(0xFF374151)),
-                   ),
-                   style: OutlinedButton.styleFrom(
-                     padding: const EdgeInsets.symmetric(vertical: 12),
-                     side: const BorderSide(color: Color(0xFFE2E8F0)),
-                     shape: RoundedRectangleBorder(
-                       borderRadius: BorderRadius.circular(12),
-                     ),
-                   ),
-                 ),
-               ),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onDetails,
+                  icon: const Icon(
+                    Icons.info_outline_rounded,
+                    size: 18,
+                    color: Color(0xFF374151),
+                  ),
+                  label: const Text(
+                    'Detalhes',
+                    style: TextStyle(color: Color(0xFF374151)),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ],

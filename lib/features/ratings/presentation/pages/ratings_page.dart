@@ -8,13 +8,6 @@ import '../widgets/review_list_widget.dart';
 import '../widgets/bathroom_details_widget.dart';
 
 /// Page displaying bathroom ratings, statistics, and review functionality.
-///
-/// Features:
-/// - Display bathroom details (photo, amenities, ratings)
-/// - Display overall rating and statistics
-/// - Show existing reviews with vote functionality
-/// - Form to submit new reviews
-/// - Loading and error states
 class RatingsPage extends StatefulWidget {
   final String bathroomId;
   final String? bathroomName;
@@ -46,8 +39,102 @@ class _RatingsPageState extends State<RatingsPage> {
     _ratingBloc.add(LoadBathroomRatingStats(widget.bathroomId));
   }
 
+  void _showReviewModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Avaliar Banheiro',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // Form
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: controller,
+                  padding: const EdgeInsets.all(16),
+                  child: BlocListener<RatingBloc, RatingState>(
+                    listener: (context, state) {
+                      if (state is ReviewCreated) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Avaliação submetida com sucesso!')),
+                        );
+                        _loadRatings();
+                      } else if (state is RatingError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                      }
+                    },
+                    child: BlocBuilder<RatingBloc, RatingState>(
+                      builder: (context, state) {
+                        return ReviewFormWidget(
+                          isLoading: state is ReviewAdding,
+                          onSubmit: (rating, comment) {
+                            _ratingBloc.add(
+                              CreateReview(
+                                bathroomId: widget.bathroomId,
+                                rating: rating,
+                                title: 'Avaliação',
+                                comment: comment,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.bathroomName ?? 'Avaliações'),
@@ -58,7 +145,53 @@ class _RatingsPageState extends State<RatingsPage> {
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Photo Banner
+              if (widget.bathroom?.photoUrl != null && widget.bathroom!.photoUrl!.isNotEmpty)
+                Image.network(
+                  widget.bathroom!.photoUrl!,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      width: double.infinity,
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 48,
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                    );
+                  },
+                )
+              else
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primaryContainer,
+                        theme.colorScheme.secondaryContainer,
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.wc,
+                      size: 64,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+
               // Bathroom Details Section
               if (widget.bathroom != null)
                 Padding(
@@ -85,44 +218,17 @@ class _RatingsPageState extends State<RatingsPage> {
                 },
               ),
 
-              // Review Form Section
+              // Avaliar Button
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: Card(
-                  elevation: 0,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: BlocListener<RatingBloc, RatingState>(
-                      listener: (context, state) {
-                        if (state is ReviewCreated) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Avaliação submetida com sucesso!')),
-                          );
-                          _loadRatings();
-                        } else if (state is RatingError) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(state.message)),
-                          );
-                        }
-                      },
-                      child: BlocBuilder<RatingBloc, RatingState>(
-                        builder: (context, state) {
-                          return ReviewFormWidget(
-                            isLoading: state is ReviewAdding,
-                            onSubmit: (rating, comment) {
-                              _ratingBloc.add(
-                                CreateReview(
-                                  bathroomId: widget.bathroomId,
-                                  rating: rating,
-                                  title: 'Avaliação',
-                                  comment: comment,
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _showReviewModal,
+                    icon: const Icon(Icons.rate_review),
+                    label: const Text('Avaliar este Banheiro'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                 ),
@@ -130,14 +236,14 @@ class _RatingsPageState extends State<RatingsPage> {
 
               // Reviews List Section
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Avaliações dos Utilizadores',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                      'Comentários dos Utilizadores',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                     ),
                     const SizedBox(height: 16),
@@ -184,13 +290,13 @@ class _RatingsPageState extends State<RatingsPage> {
                                   Icon(
                                     Icons.error_outline,
                                     size: 48,
-                                    color: Theme.of(context).colorScheme.error,
+                                    color: theme.colorScheme.error,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
                                     state.message,
                                     textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodyMedium,
+                                    style: theme.textTheme.bodyMedium,
                                   ),
                                   const SizedBox(height: 16),
                                   ElevatedButton(
@@ -220,7 +326,7 @@ class _RatingsPageState extends State<RatingsPage> {
 
 /// Section displaying rating statistics and distribution.
 class _RatingStatsSection extends StatelessWidget {
-  final dynamic stats; // BathroomRatingStats
+  final dynamic stats;
 
   const _RatingStatsSection({required this.stats});
 
