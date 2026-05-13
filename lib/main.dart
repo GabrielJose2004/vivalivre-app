@@ -6,6 +6,9 @@ import 'package:viva_livre_app/features/health/presentation/health_bloc.dart';
 import 'package:viva_livre_app/features/health/data/repositories/health_repository.dart';
 import 'package:viva_livre_app/features/map/presentation/bloc/map_bloc.dart';
 import 'package:viva_livre_app/features/map/data/repositories/bathroom_repository_impl.dart';
+import 'package:viva_livre_app/features/ratings/presentation/bloc/rating_bloc.dart';
+import 'package:viva_livre_app/features/ratings/data/repositories/rating_repository.dart';
+import 'package:viva_livre_app/features/ratings/data/datasources/rating_remote_datasource.dart';
 import 'package:viva_livre_app/app.dart';
 import 'package:viva_livre_app/core/api/api_client.dart';
 import 'package:viva_livre_app/features/auth/data/repositories/auth_repository.dart';
@@ -21,6 +24,8 @@ void main() async {
   // Repositories
   final healthRepository = HealthRepositoryImpl(apiClient: apiClient);
   final bathroomRepository = BathroomRepositoryImpl(apiClient: apiClient);
+  final ratingRemoteDataSource = RatingRemoteDataSourceImpl(apiClient: apiClient);
+  final ratingRepository = RatingRepositoryImpl(remoteDataSource: ratingRemoteDataSource);
 
   runApp(
     MultiBlocProvider(
@@ -33,6 +38,9 @@ void main() async {
         ),
         BlocProvider<MapBloc>(
           create: (_) => MapBloc(repository: bathroomRepository)..add(const RequestGpsLocation()),
+        ),
+        BlocProvider<RatingBloc>(
+          create: (_) => RatingBloc(ratingRepository: ratingRepository),
         ),
       ],
       child: const App(),
