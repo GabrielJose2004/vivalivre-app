@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:viva_livre_app/features/map/domain/entities/bathroom.dart';
 import '../bloc/rating_bloc.dart';
 import '../widgets/star_rating_widget.dart';
 import '../widgets/review_form_widget.dart';
 import '../widgets/review_list_widget.dart';
+import '../widgets/bathroom_details_widget.dart';
 
 /// Page displaying bathroom ratings, statistics, and review functionality.
 ///
 /// Features:
+/// - Display bathroom details (photo, amenities, ratings)
 /// - Display overall rating and statistics
 /// - Show existing reviews with vote functionality
 /// - Form to submit new reviews
@@ -15,11 +18,13 @@ import '../widgets/review_list_widget.dart';
 class RatingsPage extends StatefulWidget {
   final String bathroomId;
   final String? bathroomName;
+  final Bathroom? bathroom;
 
   const RatingsPage({
     super.key,
     required this.bathroomId,
     this.bathroomName,
+    this.bathroom,
   });
 
   @override
@@ -54,6 +59,13 @@ class _RatingsPageState extends State<RatingsPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
+              // Bathroom Details Section
+              if (widget.bathroom != null)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: BathroomDetailsWidget(bathroom: widget.bathroom!),
+                ),
+
               // Rating Stats Section
               BlocBuilder<RatingBloc, RatingState>(
                 builder: (context, state) {

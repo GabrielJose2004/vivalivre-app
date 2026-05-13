@@ -316,6 +316,7 @@ class _MapPageState extends State<MapPage>
                                  builder: (_) => RatingsPage(
                                    bathroomId: pin.id.toString(),
                                    bathroomName: pin.name,
+                                   bathroom: pin,
                                  ),
                                ),
                              );
