@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:viva_livre_app/core/api/api_client.dart';
 import 'package:viva_livre_app/features/ratings/data/models/bathroom_review_model.dart';
