@@ -1,0 +1,273 @@
+import 'package:flutter/material.dart';
+import 'package:viva_livre_app/features/map/domain/entities/bathroom.dart';
+
+/// Widget displaying bathroom amenities and details.
+///
+/// Shows:
+/// - Photo (if available)
+/// - Address
+/// - Amenities (accessibility, changing table, free)
+/// - Cleanliness and accessibility ratings
+class BathroomDetailsWidget extends StatelessWidget {
+  final Bathroom bathroom;
+
+  const BathroomDetailsWidget({
+    super.key,
+    required this.bathroom,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Photo Section
+        if (bathroom.photoUrl != null && bathroom.photoUrl!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                bathroom.photoUrl!,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 48,
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+        // Address Section
+        if (bathroom.address != null && bathroom.address!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Localização',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        bathroom.address!,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+        // Amenities Section
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Comodidades',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _AmenityChip(
+                    icon: Icons.accessible_outlined,
+                    label: 'Acessível',
+                    isAvailable: bathroom.isAccessible,
+                    theme: theme,
+                  ),
+                  _AmenityChip(
+                    icon: Icons.child_care_outlined,
+                    label: 'Trocador',
+                    isAvailable: bathroom.hasChangingTable,
+                    theme: theme,
+                  ),
+                  _AmenityChip(
+                    icon: Icons.local_offer_outlined,
+                    label: 'Gratuito',
+                    isAvailable: bathroom.isFree,
+                    theme: theme,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Ratings Section
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Avaliações Específicas',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _RatingRow(
+                label: 'Limpeza',
+                rating: bathroom.cleanlinessRating,
+                theme: theme,
+              ),
+              const SizedBox(height: 12),
+              _RatingRow(
+                label: 'Acessibilidade',
+                rating: bathroom.accessibilityRating,
+                theme: theme,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Individual amenity chip showing availability.
+class _AmenityChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isAvailable;
+  final ThemeData theme;
+
+  const _AmenityChip({
+    required this.icon,
+    required this.label,
+    required this.isAvailable,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isAvailable
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isAvailable
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isAvailable
+                ? theme.colorScheme.onPrimaryContainer
+                : theme.colorScheme.outline,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: isAvailable
+                  ? theme.colorScheme.onPrimaryContainer
+                  : theme.colorScheme.outline,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (!isAvailable) ...[
+            const SizedBox(width: 4),
+            Icon(
+              Icons.close,
+              size: 14,
+              color: theme.colorScheme.outline,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Rating row showing label and star rating.
+class _RatingRow extends StatelessWidget {
+  final String label;
+  final double rating;
+  final ThemeData theme;
+
+  const _RatingRow({
+    required this.label,
+    required this.rating,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodyMedium,
+        ),
+        Row(
+          children: [
+            ...List.generate(5, (index) {
+              final isFilled = index < rating.toInt();
+              return Icon(
+                isFilled ? Icons.star : Icons.star_outline,
+                size: 18,
+                color: isFilled
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline,
+              );
+            }),
+            const SizedBox(width: 8),
+            Text(
+              rating.toStringAsFixed(1),
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

@@ -9,6 +9,13 @@ class BathroomModel extends Bathroom {
     required super.rating,
     required super.tags,
     required super.isOpen,
+    super.address,
+    super.isAccessible,
+    super.hasChangingTable,
+    super.isFree,
+    super.cleanlinessRating,
+    super.accessibilityRating,
+    super.photoUrl,
   });
 
   factory BathroomModel.fromMap(Map<String, dynamic> map) {
@@ -31,6 +38,13 @@ class BathroomModel extends Bathroom {
           (map['tags'] as List?)?.map((e) => e.toString()).toList() ??
           [if (isAccessible) 'Acessivel'],
       isOpen: (map['open'] as bool?) ?? false,
+      address: (map['address'] as String?),
+      isAccessible: isAccessible,
+      hasChangingTable: (map['has_changing_table'] as bool?) ?? false,
+      isFree: (map['is_free'] as bool?) ?? false,
+      cleanlinessRating: (map['cleanliness_rating'] as num?)?.toDouble() ?? 0.0,
+      accessibilityRating: (map['accessibility_rating'] as num?)?.toDouble() ?? 0.0,
+      photoUrl: (map['photo_url'] as String?),
     );
   }
 
@@ -38,13 +52,19 @@ class BathroomModel extends Bathroom {
     return {
       'id': id,
       'name': name,
+      'address': address,
       'latitude': location.latitude,
       'longitude': location.longitude,
       'lat': location.latitude,
       'lng': location.longitude,
       'rating': rating,
       'tags': tags,
-      'is_accessible': tags.contains('Acessivel'),
+      'is_accessible': isAccessible,
+      'has_changing_table': hasChangingTable,
+      'is_free': isFree,
+      'cleanliness_rating': cleanlinessRating,
+      'accessibility_rating': accessibilityRating,
+      'photo_url': photoUrl,
       'open': isOpen,
     };
   }

@@ -14,6 +14,7 @@ import 'package:viva_livre_app/features/map/presentation/pages/add_bathroom_page
 import 'package:viva_livre_app/features/map/presentation/widgets/bathroom_card.dart';
 import 'package:viva_livre_app/features/map/presentation/widgets/emergency_button.dart';
 import 'package:viva_livre_app/features/map/presentation/widgets/map_search_bar.dart';
+import 'package:viva_livre_app/features/ratings/presentation/pages/ratings_page.dart';
 
 const _kBlue = Color(0xFF2563EB);
 const _kInitialZoom = 17.0;
@@ -299,17 +300,31 @@ class _MapPageState extends State<MapPage>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (selectedPin != null && !_showEmergency) ...[
-                      BathroomCard(
-                        bathroom: selectedPin,
-                        distanceText: _formatDistance(
-                          currentPosition,
-                          selectedPin,
-                        ),
-                        onClose: () =>
-                            context.read<MapBloc>().add(const ClearSelection()),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
+                       BathroomCard(
+                         bathroom: selectedPin,
+                         distanceText: _formatDistance(
+                           currentPosition,
+                           selectedPin,
+                         ),
+                         onClose: () =>
+                             context.read<MapBloc>().add(const ClearSelection()),
+                         onDetails: () {
+                           final pin = selectedPin;
+                           if (pin != null) {
+                             Navigator.of(context).push(
+                               MaterialPageRoute(
+                                 builder: (_) => RatingsPage(
+                                   bathroomId: pin.id.toString(),
+                                   bathroomName: pin.name,
+                                   bathroom: pin,
+                                 ),
+                               ),
+                             );
+                           }
+                         },
+                       ),
+                       const SizedBox(height: 12),
+                     ],
                     EmergencyButton(
                       onEmergency: _handleFindNearest,
                       onAddBathroom: () => Navigator.of(context).push(
