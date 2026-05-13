@@ -9,13 +9,15 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ReviewFormWidget(
-              onSubmit: (rating, comment) {},
+              onSubmit: (rating, comment, cleanliness, accessibility) {},
             ),
           ),
         ),
       );
 
-      expect(find.text('Tua avaliação'), findsOneWidget);
+      expect(find.text('Nota Geral'), findsOneWidget);
+      expect(find.text('Limpeza'), findsOneWidget);
+      expect(find.text('Acessibilidade'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.byType(ElevatedButton), findsOneWidget);
     });
@@ -25,7 +27,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ReviewFormWidget(
-              onSubmit: (rating, comment) {},
+              onSubmit: (rating, comment, cleanliness, accessibility) {},
             ),
           ),
         ),
@@ -38,25 +40,38 @@ void main() {
       expect(find.byType(SnackBar), findsOneWidget);
     });
 
-    testWidgetWithMaterialApp('calls onSubmit with rating and comment', (WidgetTester tester) async {
+    testWidgetWithMaterialApp('calls onSubmit with all ratings and comment', (WidgetTester tester) async {
       int? submittedRating;
       String? submittedComment;
+      int? submittedCleanliness;
+      int? submittedAccessibility;
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: ReviewFormWidget(
-              onSubmit: (rating, comment) {
+              onSubmit: (rating, comment, cleanliness, accessibility) {
                 submittedRating = rating;
                 submittedComment = comment;
+                submittedCleanliness = cleanliness;
+                submittedAccessibility = accessibility;
               },
             ),
           ),
         ),
       );
 
-      // Select a rating (tap 4th star)
-      await tester.tap(find.byIcon(Icons.star_outlined).at(3));
+      // Select overall rating (tap 4th star in first row)
+      final overallStars = find.byIcon(Icons.star_outlined);
+      await tester.tap(overallStars.at(3));
+      await tester.pumpAndSettle();
+
+      // Select cleanliness rating (tap 5th star in second row)
+      await tester.tap(overallStars.at(9));
+      await tester.pumpAndSettle();
+
+      // Select accessibility rating (tap 3rd star in third row)
+      await tester.tap(overallStars.at(12));
       await tester.pumpAndSettle();
 
       // Enter comment
@@ -69,6 +84,8 @@ void main() {
 
       expect(submittedRating, equals(4));
       expect(submittedComment, equals('Great bathroom!'));
+      expect(submittedCleanliness, equals(5));
+      expect(submittedAccessibility, equals(3));
     });
 
     testWidgets('shows loading state', (WidgetTester tester) async {
@@ -77,7 +94,7 @@ void main() {
           home: Scaffold(
             body: ReviewFormWidget(
               isLoading: true,
-              onSubmit: (rating, comment) {},
+              onSubmit: (rating, comment, cleanliness, accessibility) {},
             ),
           ),
         ),
@@ -93,7 +110,7 @@ void main() {
           home: Scaffold(
             body: ReviewFormWidget(
               isLoading: true,
-              onSubmit: (rating, comment) {},
+              onSubmit: (rating, comment, cleanliness, accessibility) {},
             ),
           ),
         ),
@@ -108,7 +125,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ReviewFormWidget(
-              onSubmit: (rating, comment) {},
+              onSubmit: (rating, comment, cleanliness, accessibility) {},
             ),
           ),
         ),
@@ -130,7 +147,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ReviewFormWidget(
-              onSubmit: (rating, comment) {},
+              onSubmit: (rating, comment, cleanliness, accessibility) {},
             ),
           ),
         ),
@@ -153,7 +170,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ReviewFormWidget(
-              onSubmit: (rating, comment) {
+              onSubmit: (rating, comment, cleanliness, accessibility) {
                 submittedRating = rating;
                 submittedComment = comment;
               },

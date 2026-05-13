@@ -4,12 +4,14 @@ import 'star_rating_widget.dart';
 /// Form widget for submitting reviews with rating and comment.
 ///
 /// Includes:
-/// - Star rating selector (required)
+/// - Overall rating selector (required)
+/// - Cleanliness rating selector
+/// - Accessibility rating selector
 /// - Comment text field (optional)
 /// - Submit button
 /// - Form validation
 class ReviewFormWidget extends StatefulWidget {
-  final Function(int rating, String comment) onSubmit;
+  final Function(int rating, String comment, int? cleanliness, int? accessibility) onSubmit;
   final bool isLoading;
   final String? initialRating;
 
@@ -26,13 +28,17 @@ class ReviewFormWidget extends StatefulWidget {
 
 class _ReviewFormWidgetState extends State<ReviewFormWidget> {
   final _formKey = GlobalKey<FormState>();
-  late double _selectedRating;
+  late double _overallRating;
+  late double _cleanlinessRating;
+  late double _accessibilityRating;
   late TextEditingController _commentController;
 
   @override
   void initState() {
     super.initState();
-    _selectedRating = widget.initialRating != null ? double.parse(widget.initialRating!) : 0;
+    _overallRating = widget.initialRating != null ? double.parse(widget.initialRating!) : 0;
+    _cleanlinessRating = 0;
+    _accessibilityRating = 0;
     _commentController = TextEditingController();
   }
 
@@ -44,14 +50,19 @@ class _ReviewFormWidgetState extends State<ReviewFormWidget> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedRating == 0) {
+      if (_overallRating == 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecciona uma classificação em estrelas')),
+          const SnackBar(content: Text('Selecciona uma classificação geral')),
         );
         return;
       }
 
-      widget.onSubmit(_selectedRating.toInt(), _commentController.text.trim());
+      widget.onSubmit(
+        _overallRating.toInt(),
+        _commentController.text.trim(),
+        _cleanlinessRating > 0 ? _cleanlinessRating.toInt() : null,
+        _accessibilityRating > 0 ? _accessibilityRating.toInt() : null,
+      );
     }
   }
 
@@ -62,86 +73,151 @@ class _ReviewFormWidgetState extends State<ReviewFormWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Rating Label
+          // Overall Rating
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              'Tua avaliação',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nota Geral',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                StarRatingWidget(
+                  initialRating: _overallRating,
+                  onRatingChanged: (rating) {
+                    setState(() => _overallRating = rating);
+                  },
+                ),
+              ],
             ),
           ),
 
-          // Star Rating Widget
+          const Divider(),
+
+          // Cleanliness Rating
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: StarRatingWidget(
-              initialRating: _selectedRating,
-              onRatingChanged: (rating) {
-                setState(() => _selectedRating = rating);
-              },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Limpeza',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                StarRatingWidget(
+                  initialRating: _cleanlinessRating,
+                  size: 28,
+                  onRatingChanged: (rating) {
+                    setState(() => _cleanlinessRating = rating);
+                  },
+                ),
+              ],
             ),
           ),
+
+          const Divider(),
+
+          // Accessibility Rating
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Acessibilidade',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                StarRatingWidget(
+                  initialRating: _accessibilityRating,
+                  size: 28,
+                  onRatingChanged: (rating) {
+                    setState(() => _accessibilityRating = rating);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(),
 
           // Comment Field
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: TextFormField(
-              controller: _commentController,
-              maxLines: 4,
-              maxLength: 500,
-              enabled: !widget.isLoading,
-              decoration: InputDecoration(
-                hintText: 'Deixa um comentário (opcional)',
-                hintStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.outline,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Comentário (opcional)',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _commentController,
+                  maxLines: 4,
+                  maxLength: 500,
+                  enabled: !widget.isLoading,
+                  decoration: InputDecoration(
+                    hintText: 'Partilha a tua experiência...',
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                    counterText: '',
+                  ),
+                  validator: (value) {
+                    if (value != null && value.length > 500) {
+                      return 'Máximo 500 caracteres';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${_commentController.text.length}/500',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                   ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
-                counterText: '',
-              ),
-              validator: (value) {
-                if (value != null && value.length > 500) {
-                  return 'Máximo 500 caracteres';
-                }
-                return null;
-              },
+              ],
             ),
           ),
 
-          // Character Counter
-          Padding(
-            padding: const EdgeInsets.only(right: 8, bottom: 12),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                '${_commentController.text.length}/500',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-              ),
-            ),
-          ),
+          const SizedBox(height: 8),
 
           // Submit Button
           SizedBox(

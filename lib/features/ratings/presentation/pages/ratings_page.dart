@@ -108,13 +108,15 @@ class _RatingsPageState extends State<RatingsPage> {
                       builder: (context, state) {
                         return ReviewFormWidget(
                           isLoading: state is ReviewAdding,
-                          onSubmit: (rating, comment) {
+                          onSubmit: (rating, comment, cleanliness, accessibility) {
                             _ratingBloc.add(
                               CreateReview(
                                 bathroomId: widget.bathroomId,
                                 rating: rating,
                                 title: 'Avaliação',
                                 comment: comment,
+                                cleanlinessRating: cleanliness,
+                                accessibilityRating: accessibility,
                               ),
                             );
                           },
