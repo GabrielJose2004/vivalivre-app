@@ -11,12 +11,14 @@ class BathroomCard extends StatelessWidget {
   final Bathroom bathroom;
   final String distanceText;
   final VoidCallback onClose;
+  final VoidCallback? onDetails;
 
   const BathroomCard({
     super.key,
     required this.bathroom,
     required this.distanceText,
     required this.onClose,
+    this.onDetails,
   });
 
   @override
@@ -153,27 +155,27 @@ class BathroomCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.info_outline_rounded,
-                    size: 18,
-                    color: Color(0xFF374151),
-                  ),
-                  label: const Text(
-                    'Detalhes',
-                    style: TextStyle(color: Color(0xFF374151)),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
+               Expanded(
+                 child: OutlinedButton.icon(
+                   onPressed: onDetails,
+                   icon: const Icon(
+                     Icons.info_outline_rounded,
+                     size: 18,
+                     color: Color(0xFF374151),
+                   ),
+                   label: const Text(
+                     'Detalhes',
+                     style: TextStyle(color: Color(0xFF374151)),
+                   ),
+                   style: OutlinedButton.styleFrom(
+                     padding: const EdgeInsets.symmetric(vertical: 12),
+                     side: const BorderSide(color: Color(0xFFE2E8F0)),
+                     shape: RoundedRectangleBorder(
+                       borderRadius: BorderRadius.circular(12),
+                     ),
+                   ),
+                 ),
+               ),
             ],
           ),
         ],
